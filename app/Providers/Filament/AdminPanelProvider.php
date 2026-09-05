@@ -1,0 +1,104 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use App\Filament\Widgets\SchoolOverview;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use CraftForge\FilamentLanguageSwitcher\FilamentLanguageSwitcherPlugin;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
+use Filament\Pages\Dashboard;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->default()
+            ->id('admin')
+            ->path('admin')
+            ->login()
+            ->colors([
+                'primary' => Color::Amber,
+            ])
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->pages([
+                Dashboard::class,
+            ])
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            ->widgets([
+                AccountWidget::class,
+                FilamentInfoWidget::class,
+                SchoolOverview::class, // Your new section
+            ])
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label(fn () => __('Academic'))
+                    ->icon('heroicon-o-academic-cap'),
+
+                NavigationGroup::make()
+                    ->label(fn () => __('People'))
+                    ->icon('heroicon-o-users'),
+
+                NavigationGroup::make()
+                    ->label(fn () => __('Attendance'))
+                    ->icon('heroicon-o-clipboard-document-check'),
+
+                NavigationGroup::make()
+                    ->label(fn () => __('Examinations'))
+                    ->icon('heroicon-o-document-text'),
+
+                NavigationGroup::make()
+                    ->label(fn () => __('Finance'))
+                    ->icon('heroicon-o-banknotes'),
+
+                NavigationGroup::make()
+                    ->label(fn () => __('Communication'))
+                    ->icon('heroicon-o-megaphone'),
+
+                NavigationGroup::make()
+                    ->label(fn () => __('Access Control'))
+                    ->icon('heroicon-o-shield-check'),
+            ])
+            ->middleware([
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                PreventRequestForgery::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
+            ])
+            ->plugins([
+                FilamentShieldPlugin::make(),
+                FilamentLanguageSwitcherPlugin::make()
+                    ->locales([
+                        ['code' => 'en', 'name' => 'English', 'flag' => 'us'],
+                        ['code' => 'fr', 'name' => 'Français', 'flag' => 'fr'],
+                        // ['code' => 'de', 'name' => 'Deutsch', 'flag' => 'de'],
+                    ])
+                    ->rememberLocale(days: 30)
+                    ->showOnAuthPages()
+            ])
+            ->authMiddleware([
+                Authenticate::class,
+            ]);
+    }
+}
